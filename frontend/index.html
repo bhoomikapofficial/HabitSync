@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HabitSync — One place for your daily routine</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div class="auth-shell">
+  <div class="auth-hero">
+    <div class="wordmark">HabitSync</div>
+
+    <div>
+      <h1 class="headline">Every part of your day, in one place.</h1>
+      <p class="tagline">Habits, water, sleep, expenses and reminders — tracked together, synced across your devices, and turned into insights you can actually use.</p>
+    </div>
+
+    <div class="domain-tags">
+      <span class="domain-tag">habits</span>
+      <span class="domain-tag">water</span>
+      <span class="domain-tag">sleep</span>
+      <span class="domain-tag">expenses</span>
+      <span class="domain-tag">reminders</span>
+      <span class="domain-tag">analytics</span>
+    </div>
+  </div>
+
+  <div class="auth-panel">
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <div class="auth-tab active" data-tab="login">Log in</div>
+        <div class="auth-tab" data-tab="register">Create account</div>
+      </div>
+
+      <!-- Login form -->
+      <form class="auth-form active" id="login-form" novalidate>
+        <div class="form-error-banner" id="login-error"></div>
+
+        <div class="field">
+          <label for="login-email">Email</label>
+          <input type="email" id="login-email" required autocomplete="email" placeholder="you@example.com" />
+        </div>
+
+        <div class="field">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" required autocomplete="current-password" placeholder="••••••••" />
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" id="login-submit">Log in</button>
+      </form>
+
+      <!-- Register form -->
+      <form class="auth-form" id="register-form" novalidate>
+        <div class="form-error-banner" id="register-error"></div>
+
+        <div class="field">
+          <label for="register-name">Name</label>
+          <input type="text" id="register-name" required autocomplete="name" placeholder="Your name" />
+        </div>
+
+        <div class="field">
+          <label for="register-email">Email</label>
+          <input type="email" id="register-email" required autocomplete="email" placeholder="you@example.com" />
+        </div>
+
+        <div class="field">
+          <label for="register-password">Password</label>
+          <input type="password" id="register-password" required autocomplete="new-password" placeholder="At least 6 characters" minlength="6" />
+          <div class="field-hint">Use at least 6 characters.</div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" id="register-submit">Create account</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/auth.js"></script>
+</body>
+</html>

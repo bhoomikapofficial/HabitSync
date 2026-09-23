@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dashboard — HabitSync</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar-root"></aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <div class="eyebrow-date" id="today-date"></div>
+        <h1>Today's progress</h1>
+      </div>
+      <button class="btn btn-outline btn-sm" id="enable-notifications-btn">Enable notifications</button>
+    </div>
+
+    <div class="grid grid-4" id="stat-grid">
+      <div class="card stat-card domain-habits">
+        <div class="stat-label">Habits</div>
+        <div class="stat-value mono" id="stat-habits">—</div>
+        <div class="progress-track"><div class="progress-fill" id="stat-habits-bar" style="width:0%"></div></div>
+      </div>
+      <div class="card stat-card domain-water">
+        <div class="stat-label">Water</div>
+        <div class="stat-value mono" id="stat-water">—</div>
+        <div class="progress-track"><div class="progress-fill water" id="stat-water-bar" style="width:0%"></div></div>
+      </div>
+      <div class="card stat-card domain-sleep">
+        <div class="stat-label">Sleep</div>
+        <div class="stat-value mono" id="stat-sleep">—</div>
+        <div class="stat-sub">last recorded</div>
+      </div>
+      <div class="card stat-card domain-expenses">
+        <div class="stat-label">Expenses today</div>
+        <div class="stat-value mono" id="stat-expenses">—</div>
+        <div class="stat-sub" id="stat-expenses-sub">&nbsp;</div>
+      </div>
+    </div>
+
+    <div class="grid grid-2 mt-2">
+      <div class="card">
+        <div class="flex-between">
+          <h2>Upcoming reminders</h2>
+          <a href="reminders.html">View all</a>
+        </div>
+        <div id="reminders-list"><div class="loading-row">Loading…</div></div>
+      </div>
+
+      <div class="card">
+        <h2>Quick actions</h2>
+        <div class="flex flex-gap" style="flex-wrap:wrap;">
+          <button class="btn btn-outline btn-sm" id="qa-water">+250 ml water</button>
+          <button class="btn btn-outline btn-sm" onclick="window.location.href='habits.html'">Log a habit</button>
+          <button class="btn btn-outline btn-sm" onclick="window.location.href='expenses.html'">Add expense</button>
+          <button class="btn btn-outline btn-sm" onclick="window.location.href='sleep.html'">Log sleep</button>
+          <button class="btn btn-outline btn-sm" onclick="window.location.href='reminders.html'">New reminder</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="insights-panel mt-2" id="insights-panel" style="display:none;">
+      <h3>Insights for you</h3>
+      <ul id="insights-list"></ul>
+    </div>
+  </main>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/notifications.js"></script>
+<script src="js/dashboard.js"></script>
+</body>
+</html>

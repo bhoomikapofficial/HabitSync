@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Analytics — HabitSync</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar-root"></aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <div class="eyebrow-date" id="today-date"></div>
+        <h1>Analytics</h1>
+      </div>
+      <select id="range-select" style="padding:0.5em 0.8em; border-radius:5px; border:1px solid var(--line-strong);">
+        <option value="7">Last 7 days</option>
+        <option value="30">Last 30 days</option>
+      </select>
+    </div>
+
+    <div class="insights-panel" id="insights-panel" style="display:none; margin-bottom:1.4rem;">
+      <h3>Insights for you</h3>
+      <ul id="insights-list"></ul>
+    </div>
+
+    <div class="grid grid-2">
+      <div class="card stat-card domain-habits">
+        <h3>Habit consistency</h3>
+        <div class="stat-value mono" id="habit-overall-pct">—</div>
+        <div class="stat-sub">overall completion rate</div>
+        <div id="habit-per-list" class="mt-1"></div>
+      </div>
+
+      <div class="card stat-card domain-water">
+        <h3>Water intake</h3>
+        <div class="chart-wrap small"><canvas id="water-analytics-chart"></canvas></div>
+        <div class="stat-sub mt-1" id="water-analytics-sub">&nbsp;</div>
+      </div>
+
+      <div class="card stat-card domain-sleep">
+        <h3>Sleep pattern</h3>
+        <div class="chart-wrap small"><canvas id="sleep-analytics-chart"></canvas></div>
+        <div class="stat-sub mt-1" id="sleep-analytics-sub">&nbsp;</div>
+      </div>
+
+      <div class="card stat-card domain-expenses">
+        <h3>Expense breakdown</h3>
+        <div class="chart-wrap small"><canvas id="expense-analytics-chart"></canvas></div>
+        <div class="stat-sub mt-1" id="expense-analytics-sub">&nbsp;</div>
+      </div>
+    </div>
+
+    <div class="card mt-2">
+      <h3>Habits completed per day</h3>
+      <div class="chart-wrap"><canvas id="habits-daily-chart"></canvas></div>
+    </div>
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/analytics.js"></script>
+</body>
+</html>

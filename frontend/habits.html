@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Habits — HabitSync</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar-root"></aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <div class="eyebrow-date" id="today-date"></div>
+        <h1>Habits</h1>
+      </div>
+      <button class="btn btn-primary" id="new-habit-btn">+ New habit</button>
+    </div>
+
+    <div class="card">
+      <div id="habits-list"><div class="loading-row">Loading…</div></div>
+    </div>
+  </main>
+</div>
+
+<!-- Create / edit habit modal -->
+<div class="modal-overlay" id="habit-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="habit-modal-title">New habit</h2>
+      <button class="icon-btn" onclick="UI.closeModal('habit-modal')">✕</button>
+    </div>
+    <form id="habit-form">
+      <input type="hidden" id="habit-id" />
+      <div class="field">
+        <label for="habit-name">Name</label>
+        <input type="text" id="habit-name" required placeholder="e.g. Study Java" />
+      </div>
+      <div class="field">
+        <label for="habit-description">Description (optional)</label>
+        <textarea id="habit-description" placeholder="Any notes about this habit"></textarea>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="habit-target">Target</label>
+          <input type="text" id="habit-target" placeholder="e.g. 2 hours" />
+        </div>
+        <div class="field">
+          <label for="habit-frequency">Frequency</label>
+          <select id="habit-frequency">
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="habit-reminder">Reminder time (optional)</label>
+        <input type="time" id="habit-reminder" />
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="UI.closeModal('habit-modal')">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="habit-submit-btn">Save habit</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- History modal -->
+<div class="modal-overlay" id="history-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="history-modal-title">History</h2>
+      <button class="icon-btn" onclick="UI.closeModal('history-modal')">✕</button>
+    </div>
+    <div id="history-summary" class="stat-sub mt-1"></div>
+    <div id="history-list" class="mt-1"></div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/habits.js"></script>
+</body>
+</html>

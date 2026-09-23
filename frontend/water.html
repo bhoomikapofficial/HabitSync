@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Water — HabitSync</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar-root"></aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <div class="eyebrow-date" id="today-date"></div>
+        <h1>Water intake</h1>
+      </div>
+      <button class="btn btn-outline btn-sm" id="edit-goal-btn">Edit goal</button>
+    </div>
+
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="stat-label">Today</div>
+        <div class="stat-value mono" id="water-today">—</div>
+        <div class="progress-track"><div class="progress-fill water" id="water-today-bar" style="width:0%"></div></div>
+        <div class="flex flex-gap mt-1" style="flex-wrap:wrap;">
+          <button class="btn btn-outline btn-sm quick-add" data-amount="150">+150 ml</button>
+          <button class="btn btn-outline btn-sm quick-add" data-amount="250">+250 ml</button>
+          <button class="btn btn-outline btn-sm quick-add" data-amount="500">+500 ml</button>
+          <button class="btn btn-outline btn-sm" id="custom-add-btn">Custom amount</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Last 7 days</h3>
+        <div class="chart-wrap small"><canvas id="water-chart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="card mt-2">
+      <h3>Today's log</h3>
+      <div id="water-log-list"><div class="loading-row">Loading…</div></div>
+    </div>
+  </main>
+</div>
+
+<div class="modal-overlay" id="custom-water-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Add water intake</h2>
+      <button class="icon-btn" onclick="UI.closeModal('custom-water-modal')">✕</button>
+    </div>
+    <form id="custom-water-form">
+      <div class="field">
+        <label for="custom-water-amount">Amount (ml)</label>
+        <input type="number" id="custom-water-amount" min="1" required placeholder="e.g. 300" />
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="UI.closeModal('custom-water-modal')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Add</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="goal-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Daily water goal</h2>
+      <button class="icon-btn" onclick="UI.closeModal('goal-modal')">✕</button>
+    </div>
+    <form id="goal-form">
+      <div class="field">
+        <label for="goal-amount">Goal (ml)</label>
+        <input type="number" id="goal-amount" min="1" required />
+        <div class="field-hint">e.g. 3000 for 3 litres a day</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="UI.closeModal('goal-modal')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save goal</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/notifications.js"></script>
+<script src="js/water.js"></script>
+</body>
+</html>
