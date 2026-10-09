@@ -107,6 +107,10 @@ const getSummary = asyncHandler(async (req, res) => {
   const budget = req.user.monthlyBudget || 0;
   const budgetWarning = budgetWarningInsight(monthTotal, budget);
   const budgetUtilization = budget > 0 ? Math.round((monthTotal / budget) * 100) : null;
+  // Budget difference = Monthly budget - Current-month expense.
+  // Negative means overspending; only meaningful once a budget is set.
+  const budgetDifference = budget > 0 ? budget - monthTotal : null;
+  const overspending = budgetDifference !== null && budgetDifference < 0;
 
   res.status(200).json({
     success: true,
@@ -116,6 +120,8 @@ const getSummary = asyncHandler(async (req, res) => {
       categoryBreakdown,
       budget,
       budgetUtilization,
+      budgetDifference,
+      overspending,
       budgetWarning,
     },
   });

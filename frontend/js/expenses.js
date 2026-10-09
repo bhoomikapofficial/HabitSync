@@ -138,13 +138,22 @@
   async function loadSummary() {
     try {
       const res = await API.get('/expenses/summary');
-      const { todayTotal, monthTotal, budget, budgetUtilization, budgetWarning, categoryBreakdown } = res.data;
+      const { todayTotal, monthTotal, budget, budgetUtilization, budgetDifference, budgetWarning, categoryBreakdown } = res.data;
 
       document.getElementById('expense-today').textContent = UI.formatCurrency(todayTotal);
       document.getElementById('expense-month').textContent = UI.formatCurrency(monthTotal);
       document.getElementById('expense-budget').textContent = budget > 0 ? UI.formatCurrency(budget) : 'Not set';
       document.getElementById('budget-bar').style.width = `${Math.min(100, budgetUtilization || 0)}%`;
       document.getElementById('budget-bar').className = `progress-fill ${(budgetUtilization || 0) >= 90 ? 'danger' : 'amber'}`;
+
+      const diffEl = document.getElementById('expense-budget-diff');
+      if (budgetDifference === null || budgetDifference === undefined) {
+        diffEl.textContent = 'Set a budget to see how much you have left';
+      } else if (budgetDifference >= 0) {
+        diffEl.textContent = `${UI.formatCurrency(budgetDifference)} left this month`;
+      } else {
+        diffEl.textContent = `${UI.formatCurrency(Math.abs(budgetDifference))} over budget`;
+      }
 
       const warningCard = document.getElementById('budget-warning-card');
       if (budgetWarning) {
@@ -155,27 +164,44 @@
         warningCard.style.display = 'none';
       }
 
-      // Category doughnut chart
+      // Category doughnut chart. The canvas element itself is never
+      // removed from the DOM (only shown/hidden alongside a plain-text
+      // empty state) so the chart keeps working correctly on every
+      // subsequent refresh, including after a month with zero expenses.
       const labels = Object.keys(categoryBreakdown);
       const values = Object.values(categoryBreakdown);
-      const ctx = document.getElementById('category-chart').getContext('2d');
-      if (categoryChart) categoryChart.destroy();
+      const canvas = document.getElementById('category-chart');
+      const emptyEl = document.getElementById('category-chart-empty');
+      if (categoryChart) {
+        categoryChart.destroy();
+        categoryChart = null;
+      }
 
       if (labels.length === 0) {
-        ctx.canvas.parentElement.innerHTML = '<p class="text-muted">No expenses recorded this month yet.</p>';
+        canvas.style.display = 'none';
+        emptyEl.style.display = 'block';
       } else {
-        categoryChart = new Chart(ctx, {
-          type: 'doughnut',
-          data: {
-            labels,
-            datasets: [{ data: values, backgroundColor: labels.map((l) => CATEGORY_COLORS[l] || '#8A8F87') }],
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } } },
-          },
-        });
+        canvas.style.display = 'block';
+        emptyEl.style.display = 'none';
+        try {
+          const ctx = canvas.getContext('2d');
+          categoryChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+              labels,
+              datasets: [{ data: values, backgroundColor: labels.map((l) => CATEGORY_COLORS[l] || '#8A8F87') }],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } } },
+            },
+          });
+        } catch (chartErr) {
+          canvas.style.display = 'none';
+          emptyEl.style.display = 'block';
+          emptyEl.textContent = 'Could not render the chart.';
+        }
       }
     } catch (err) {
       UI.toast(err.message, 'error');
@@ -190,34 +216,39 @@
       const labels = dailyTotals.map((d) => UI.formatDate(d.date));
       const values = dailyTotals.map((d) => d.total);
 
-      const ctx = document.getElementById('daily-chart').getContext('2d');
-      if (dailyChart) dailyChart.destroy();
-      dailyChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels,
-          datasets: [
-            {
-              label: 'Spending (₹)',
-              data: values,
-              borderColor: '#C9832B',
-              backgroundColor: 'rgba(201, 131, 43, 0.15)',
-              fill: true,
-              tension: 0.25,
-              pointRadius: 2,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            y: { beginAtZero: true, grid: { color: '#DDE3DC' } },
-            x: { grid: { display: false }, ticks: { maxTicksLimit: 8 } },
+      const canvas = document.getElementById('daily-chart');
+      if (dailyChart) {
+        dailyChart.destroy();
+        dailyChart = null;
+      }
+      dailyChart = UI.renderChartSafely(canvas, () =>
+        new Chart(canvas.getContext('2d'), {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [
+              {
+                label: 'Spending (₹)',
+                data: values,
+                borderColor: '#C9832B',
+                backgroundColor: 'rgba(201, 131, 43, 0.15)',
+                fill: true,
+                tension: 0.25,
+                pointRadius: 2,
+              },
+            ],
           },
-        },
-      });
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              y: { beginAtZero: true, grid: { color: '#DDE3DC' } },
+              x: { grid: { display: false }, ticks: { maxTicksLimit: 8 } },
+            },
+          },
+        })
+      );
     } catch (err) {
       UI.toast(err.message, 'error');
     }

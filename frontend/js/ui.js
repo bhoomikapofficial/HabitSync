@@ -61,6 +61,48 @@ const UI = (() => {
     return div.innerHTML;
   }
 
+  /**
+   * Runs `renderFn` (a Chart.js construction) inside a try/catch. On
+   * failure, hides the canvas and shows a plain-text fallback message in
+   * its place *without ever removing the canvas element itself* from the
+   * DOM - so the chart can render correctly again on a later refresh.
+   * On success, clears any leftover error state from a previous failed
+   * attempt. Returns the created chart instance, or null on failure.
+   */
+  function renderChartSafely(canvas, renderFn) {
+    const wrap = canvas.closest('.chart-wrap');
+    const existingError = wrap && wrap.querySelector('.chart-error');
+    if (existingError) existingError.remove();
+    canvas.style.display = 'block';
+
+    /*try {
+      return renderFn();
+    } catch {
+      canvas.style.display = 'none';
+      if (wrap) {
+        const msg = document.createElement('div');
+        msg.className = 'chart-error';
+        msg.textContent = 'Could not render the chart.';
+        wrap.appendChild(msg);
+      }
+      return null;
+    }*/
+
+    try {
+      return renderFn();
+    } catch (err) {
+      console.error('Chart rendering error:', err);
+      canvas.style.display = 'none';
+      if (wrap) {
+        const msg = document.createElement('div');
+        msg.className = 'chart-error';
+        msg.textContent = 'Could not render the chart.';
+        wrap.appendChild(msg);
+      }
+      return null;
+    }
+  }
+
   function openModal(id) {
     document.getElementById(id).classList.add('open');
   }
@@ -127,6 +169,7 @@ const UI = (() => {
     formatMl,
     formatMinutes,
     escapeHtml,
+    renderChartSafely,
     openModal,
     closeModal,
     renderSidebar,

@@ -30,7 +30,7 @@ habitsync/
 │   ├── server.js                 Express app entry point
 │   ├── config/db.js              MongoDB connection
 │   ├── models/                   Mongoose schemas (User, Habit, HabitLog,
-│   │                              WaterLog, SleepLog, Expense, Reminder)
+│   │                              WaterLog, SleepLog, Expense, Reminder, Todo)
 │   ├── middleware/                JWT auth guard + centralized error handler
 │   ├── controllers/               Business logic per module
 │   ├── routes/                    REST endpoint definitions
@@ -114,13 +114,20 @@ DELETE /api/habits/:id
 POST   /api/habits/:id/complete
 GET    /api/habits/:id/history
 
+GET    /api/todos                    ?status=pending|completed|overdue
+POST   /api/todos
+GET    /api/todos/:id
+PUT    /api/todos/:id
+DELETE /api/todos/:id
+POST   /api/todos/:id/complete
+
 GET    /api/water
 POST   /api/water
 DELETE /api/water/:id
 GET    /api/water/history
 PUT    /api/water/goal
 
-POST   /api/sleep
+POST   /api/sleep                    { sleepType: 'night' | 'daytime', ... }
 PUT    /api/sleep/:id
 DELETE /api/sleep/:id
 GET    /api/sleep/today
@@ -133,7 +140,7 @@ DELETE /api/expenses/:id
 GET    /api/expenses/summary
 PUT    /api/expenses/budget
 
-GET    /api/reminders
+GET    /api/reminders                ?status=pending|completed|dismissed
 GET    /api/reminders/upcoming
 POST   /api/reminders
 PUT    /api/reminders/:id
@@ -146,6 +153,7 @@ GET    /api/analytics/water
 GET    /api/analytics/sleep
 GET    /api/analytics/expenses
 GET    /api/analytics/insights
+GET    /api/analytics/history         ?days=14
 ```
 
 ## Security notes (per PRD section 23)
@@ -153,18 +161,70 @@ GET    /api/analytics/insights
 - Passwords are hashed with bcrypt (10 salt rounds) and never stored or
   returned in plain text.
 - All non-auth routes require a valid JWT; requests are scoped to
-  `req.userId` so users can only ever read or modify their own data.
+  `req.userId` so users can only ever read or modify their own data,
+  including the new Todo model and the 14-day analytics history.
 - Input is validated both by `express-validator` (auth routes) and by
   Mongoose schema validation (all other routes).
 - Centralized error handling returns consistent, meaningful messages
   without leaking stack traces in production.
 
+## Version 2.0 enhancements
+
+Built additively on top of Version 1 per the PRD's "Upcoming
+Requirements / Version 2.0 Enhancement" section. Nothing below removed
+or rewrote unrelated V1 functionality.
+
+- **Dashboard** — added a Todos summary card and a 7-day water trend
+  chart; every dashboard section now fetches independently
+  (`Promise.allSettled`) so one failing section never blanks the rest
+  of the page, and chart failures fall back to a plain-text message
+  instead of a blank canvas.
+- **Habits — Todo List** (new `Todo` model, `/api/todos`) — a fully
+  independent todo list next to habits: title, description, deadline
+  date/time, completion, and per-todo reminder toggle. Reminders follow
+  the PRD schedule (~2 days out, then ~5-6 hours out, then hourly in
+  the final hour) and stop automatically once a todo is completed.
+- **Water** — fixed the chart (days with no logged intake used to be
+  dropped from the chart instead of showing 0 — the backend now
+  zero-fills every day in range). Added a configurable evening
+  "remaining water" reminder (`remaining = goal - today's intake`,
+  default 9 PM, can be disabled).
+- **Sleep** — added daytime/afternoon sleep (`sleepType: 'night' |
+  'daytime'`) alongside the existing night-sleep flow. A sleep-day
+  grouping rule (a record belongs to the calendar day its *sleepTime*
+  falls on) combines same-day naps with the night sleep that follows
+  them, matching the PRD's worked example exactly (`2h nap + 6h30m
+  night sleep = 8h30m combined`). The Sleep page now shows Night Sleep,
+  Daytime Sleep, a Combined Summary, a Last-7-Days table, and History,
+  with edit/delete on both record types.
+- **Expenses** — fixed a real bug where the category chart's "no data"
+  state replaced the `<canvas>` element itself via `innerHTML`,
+  permanently breaking that chart for the rest of the session; it now
+  toggles a sibling empty-state element instead. The 30-day daily chart
+  is now zero-filled the same way as water. Added budget difference /
+  remaining amount (`budget - current-month expense`) with an
+  overspending indicator.
+- **Reminders** — added real recurrence: daily, weekly (with selected
+  days of week), custom one-off dates, and an optional end date. Past-due
+  recurring reminders are automatically rolled forward to their next
+  occurrence whenever fetched (no scheduler/cron needed, since this
+  stack doesn't include one) and stop once past their end date.
+  Notifications can be disabled per reminder.
+- **Analytics** — fixed the same canvas-destruction bug in the expense
+  breakdown chart; all four charts (habits, water, sleep, expenses) are
+  zero-filled and wrapped so a Chart.js failure shows a friendly message
+  instead of a blank area. Added `GET /api/analytics/history?days=14`:
+  a day-by-day breakdown of sleep (incl. daytime sleep), water, expenses
+  (plus week-wise totals), habits, and todos — scoped strictly to the
+  authenticated user.
+
 ## What's implemented vs. future scope
 
 This build covers the full **MVP — Version 1** scope from the PRD
-(section 6): authentication, dashboard, habit/water/sleep/expense/
-reminder tracking, analytics, rule-based personalized insights, and
-browser notifications.
+(section 6) plus the **Version 2.0 Enhancement** scope described above:
+authentication, dashboard, habit/todo/water/sleep/expense/reminder
+tracking, analytics (including 14-day history), rule-based personalized
+insights, and browser notifications.
 
 **Digital Wellbeing and the Android companion app (PRD sections 7, 18,
 21 "Future Mobile Technology") are intentionally out of scope** for
@@ -179,5 +239,6 @@ existing code, per the PRD's scalability requirement.
 ## Development phases mapping
 
 This build completes PRD Phases 1–6 (Foundation, Authentication, Core
-Modules, Dashboard, Analytics, Notifications). Phases 7–8 (Digital
-Wellbeing, Android integration) are future work as noted above.
+Modules, Dashboard, Analytics, Notifications) plus the Version 2.0
+Enhancement scope. Phases 7–8 (Digital Wellbeing, Android integration)
+are future work as noted above.

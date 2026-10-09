@@ -17,6 +17,8 @@ const sanitizeUser = (user) => ({
   email: user.email,
   waterGoalMl: user.waterGoalMl,
   monthlyBudget: user.monthlyBudget,
+  waterEveningReminderEnabled: user.waterEveningReminderEnabled,
+  waterEveningReminderTime: user.waterEveningReminderTime,
   createdAt: user.createdAt,
 });
 
@@ -95,11 +97,13 @@ const getMe = asyncHandler(async (req, res) => {
 // @route   PUT /api/auth/me
 // @access  Private
 const updateMe = asyncHandler(async (req, res) => {
-  const { name, waterGoalMl, monthlyBudget } = req.body;
+  const { name, waterGoalMl, monthlyBudget, waterEveningReminderEnabled, waterEveningReminderTime } = req.body;
 
   if (name !== undefined) req.user.name = name;
   if (waterGoalMl !== undefined) req.user.waterGoalMl = waterGoalMl;
   if (monthlyBudget !== undefined) req.user.monthlyBudget = monthlyBudget;
+  if (waterEveningReminderEnabled !== undefined) req.user.waterEveningReminderEnabled = Boolean(waterEveningReminderEnabled);
+  if (waterEveningReminderTime !== undefined) req.user.waterEveningReminderTime = waterEveningReminderTime;
 
   await req.user.save();
 

@@ -8,6 +8,7 @@ const { notFound, errorHandler } = require('./middleware/errorHandler');
 // Routes
 const authRoutes = require('./routes/authRoutes');
 const habitRoutes = require('./routes/habitRoutes');
+const todoRoutes = require('./routes/todoRoutes');
 const waterRoutes = require('./routes/waterRoutes');
 const sleepRoutes = require('./routes/sleepRoutes');
 const expenseRoutes = require('./routes/expenseRoutes');
@@ -53,6 +54,7 @@ app.get('/api/health', (req, res) => {
 // --- API routes ---
 app.use('/api/auth', authRoutes);
 app.use('/api/habits', habitRoutes);
+app.use('/api/todos', todoRoutes);
 app.use('/api/water', waterRoutes);
 app.use('/api/sleep', sleepRoutes);
 app.use('/api/expenses', expenseRoutes);
