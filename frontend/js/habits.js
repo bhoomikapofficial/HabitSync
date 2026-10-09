@@ -181,4 +181,167 @@
   }
 
   loadHabits();
+
+  // ------------------------------------------------------------------
+  // Todo list (Version 2.0) - lives alongside habits but is fully
+  // independent: it never touches Habit/HabitLog records.
+  // ------------------------------------------------------------------
+  let todos = [];
+  let todoStatusFilter = 'pending';
+
+  function openCreateTodoModal() {
+    document.getElementById('todo-modal-title').textContent = 'New todo';
+    document.getElementById('todo-form').reset();
+    document.getElementById('todo-id').value = '';
+    document.getElementById('todo-reminder-enabled').checked = true;
+    UI.openModal('todo-modal');
+  }
+
+  function openEditTodoModal(todo) {
+    document.getElementById('todo-modal-title').textContent = 'Edit todo';
+    document.getElementById('todo-id').value = todo._id;
+    document.getElementById('todo-title').value = todo.title;
+    document.getElementById('todo-description').value = todo.description || '';
+    document.getElementById('todo-deadline-date').value = new Date(todo.deadlineDate).toISOString().slice(0, 10);
+    document.getElementById('todo-deadline-time').value = todo.deadlineTime || '';
+    document.getElementById('todo-reminder-enabled').checked = todo.reminderEnabled !== false;
+    UI.openModal('todo-modal');
+  }
+
+  document.getElementById('new-todo-btn').addEventListener('click', openCreateTodoModal);
+
+  document.getElementById('todo-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('todo-id').value;
+    const payload = {
+      title: document.getElementById('todo-title').value.trim(),
+      description: document.getElementById('todo-description').value.trim(),
+      deadlineDate: document.getElementById('todo-deadline-date').value,
+      deadlineTime: document.getElementById('todo-deadline-time').value || null,
+      reminderEnabled: document.getElementById('todo-reminder-enabled').checked,
+    };
+
+    const btn = document.getElementById('todo-submit-btn');
+    btn.disabled = true;
+    try {
+      if (id) {
+        await API.put(`/todos/${id}`, payload);
+        UI.toast('Todo updated');
+      } else {
+        await API.post('/todos', payload);
+        UI.toast('Todo created');
+      }
+      UI.closeModal('todo-modal');
+      loadTodos();
+    } catch (err) {
+      UI.toast(err.message, 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  async function toggleTodoComplete(todo, checkbox) {
+    try {
+      const res = await API.post(`/todos/${todo._id}/complete`, { completed: checkbox.checked });
+      UI.toast(res.message);
+      loadTodos();
+    } catch (err) {
+      checkbox.checked = !checkbox.checked;
+      UI.toast(err.message, 'error');
+    }
+  }
+
+  async function deleteTodo(todo) {
+    if (!confirm(`Delete "${todo.title}"?`)) return;
+    try {
+      await API.del(`/todos/${todo._id}`);
+      UI.toast('Todo deleted');
+      loadTodos();
+    } catch (err) {
+      UI.toast(err.message, 'error');
+    }
+  }
+
+  function formatDeadline(todo) {
+    const dateLabel = UI.formatDate(todo.deadlineDate, { weekday: 'short', month: 'short', day: 'numeric' });
+    return todo.deadlineTime ? `${dateLabel}, ${todo.deadlineTime}` : dateLabel;
+  }
+
+  function renderTodos() {
+    const container = document.getElementById('todos-list');
+
+    const filtered = todos.filter((t) => {
+      if (todoStatusFilter === 'completed') return t.completed;
+      if (todoStatusFilter === 'overdue') return !t.completed && t.overdue;
+      return !t.completed && !t.overdue;
+    });
+
+    if (!filtered.length) {
+      const messages = {
+        pending: { icon: '✓', title: 'Nothing pending', body: 'Add a todo with a deadline to see it here.' },
+        overdue: { icon: '⏰', title: 'Nothing overdue', body: "You're all caught up." },
+        completed: { icon: '✓', title: 'No completed todos yet', body: 'Completed todos will show up here.' },
+      };
+      const m = messages[todoStatusFilter];
+      container.innerHTML = `<div class="empty-state"><div class="empty-icon">${m.icon}</div><h3>${m.title}</h3><p>${m.body}</p></div>`;
+      return;
+    }
+
+    container.innerHTML = filtered
+      .map(
+        (t) => `
+        <div class="list-row ${t.overdue ? 'is-overdue' : ''}" data-id="${t._id}">
+          <div class="flex flex-gap" style="align-items:center;">
+            <input type="checkbox" class="todo-complete-checkbox" ${t.completed ? 'checked' : ''} style="width:18px;height:18px;" />
+            <div>
+              <div class="title">${UI.escapeHtml(t.title)}</div>
+              <div class="meta">
+                Due ${formatDeadline(t)}
+                ${t.overdue ? '<span class="badge danger">Overdue</span>' : ''}
+                ${!t.reminderEnabled ? '<span class="badge">Reminders off</span>' : ''}
+              </div>
+            </div>
+          </div>
+          <div class="row-actions">
+            <button class="icon-btn edit-btn" title="Edit">✎</button>
+            <button class="icon-btn danger delete-btn" title="Delete">🗑</button>
+          </div>
+        </div>`
+      )
+      .join('');
+
+    container.querySelectorAll('.list-row').forEach((row) => {
+      const id = row.dataset.id;
+      const todo = todos.find((t) => t._id === id);
+
+      row.querySelector('.todo-complete-checkbox').addEventListener('change', (e) => toggleTodoComplete(todo, e.target));
+      row.querySelector('.edit-btn').addEventListener('click', () => openEditTodoModal(todo));
+      row.querySelector('.delete-btn').addEventListener('click', () => deleteTodo(todo));
+    });
+  }
+
+  document.querySelectorAll('.todo-filter-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.todo-filter-btn').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      todoStatusFilter = btn.dataset.status;
+      renderTodos();
+    });
+  });
+
+  async function loadTodos() {
+    try {
+      const res = await API.get('/todos');
+      todos = res.data.todos;
+      renderTodos();
+      NotificationsHelper.checkTodoReminders(todos);
+    } catch (err) {
+      UI.toast(err.message, 'error');
+      document.getElementById('todos-list').innerHTML = '<div class="loading-row">Could not load todos.</div>';
+    }
+  }
+
+  loadTodos();
+  // Re-check reminder timing periodically while the page stays open.
+  setInterval(() => NotificationsHelper.checkTodoReminders(todos), 10 * 60 * 1000);
 })();

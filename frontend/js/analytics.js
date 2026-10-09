@@ -70,17 +70,19 @@
       }
 
       destroyIfExists('habitsDaily');
-      const ctx = document.getElementById('habits-daily-chart').getContext('2d');
-      charts.habitsDaily = new Chart(ctx, {
-        type: 'bar',
-        data: { labels, datasets: [{ label: 'Habits completed', data: values, backgroundColor: '#3F6F5E', borderRadius: 4 }] },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: { y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#DDE3DC' } }, x: { grid: { display: false } } },
-        },
-      });
+      const canvas = document.getElementById('habits-daily-chart');
+      charts.habitsDaily = UI.renderChartSafely(canvas, () =>
+        new Chart(canvas.getContext('2d'), {
+          type: 'bar',
+          data: { labels, datasets: [{ label: 'Habits completed', data: values, backgroundColor: '#3F6F5E', borderRadius: 4 }] },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#DDE3DC' } }, x: { grid: { display: false } } },
+          },
+        })
+      );
     } catch (err) {
       UI.toast(err.message, 'error');
     }
@@ -95,30 +97,32 @@
         `Average ${UI.formatMl(weeklyAverage)}/day · goal met ${goalMetDays}/${dailyTotals.length} days`;
 
       destroyIfExists('water');
-      const ctx = document.getElementById('water-analytics-chart').getContext('2d');
-      charts.water = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: dailyTotals.map((d) => UI.formatDate(d.date)),
-          datasets: [
-            { label: 'Water (ml)', data: dailyTotals.map((d) => d.total), backgroundColor: '#2E7DA6', borderRadius: 4 },
-            {
-              label: 'Goal',
-              data: dailyTotals.map(() => goal),
-              type: 'line',
-              borderColor: '#C9832B',
-              borderDash: [5, 5],
-              pointRadius: 0,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: { y: { beginAtZero: true, grid: { color: '#DDE3DC' } }, x: { grid: { display: false } } },
-        },
-      });
+      const canvas = document.getElementById('water-analytics-chart');
+      charts.water = UI.renderChartSafely(canvas, () =>
+        new Chart(canvas.getContext('2d'), {
+          type: 'bar',
+          data: {
+            labels: dailyTotals.map((d) => UI.formatDate(d.date)),
+            datasets: [
+              { label: 'Water (ml)', data: dailyTotals.map((d) => d.total), backgroundColor: '#2E7DA6', borderRadius: 4 },
+              {
+                label: 'Goal',
+                data: dailyTotals.map(() => goal),
+                type: 'line',
+                borderColor: '#C9832B',
+                borderDash: [5, 5],
+                pointRadius: 0,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, grid: { color: '#DDE3DC' } }, x: { grid: { display: false } } },
+          },
+        })
+      );
     } catch (err) {
       UI.toast(err.message, 'error');
     }
@@ -132,30 +136,32 @@
       document.getElementById('sleep-analytics-sub').textContent = `Average ${averageDurationFormatted} · ${consistencyLabel}`;
 
       destroyIfExists('sleep');
-      const ctx = document.getElementById('sleep-analytics-chart').getContext('2d');
-      charts.sleep = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: byDay.map((d) => UI.formatDate(d.date)),
-          datasets: [
-            {
-              label: 'Sleep (hours)',
-              data: byDay.map((d) => Math.round((d.durationMinutes / 60) * 10) / 10),
-              borderColor: '#4A5A9E',
-              backgroundColor: 'rgba(74, 90, 158, 0.15)',
-              fill: true,
-              tension: 0.3,
-              pointRadius: 3,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: { y: { beginAtZero: true, grid: { color: '#DDE3DC' } }, x: { grid: { display: false } } },
-        },
-      });
+      const canvas = document.getElementById('sleep-analytics-chart');
+      charts.sleep = UI.renderChartSafely(canvas, () =>
+        new Chart(canvas.getContext('2d'), {
+          type: 'line',
+          data: {
+            labels: byDay.map((d) => UI.formatDate(d.date)),
+            datasets: [
+              {
+                label: 'Combined sleep (hours)',
+                data: byDay.map((d) => Math.round((d.combinedMinutes / 60) * 10) / 10),
+                borderColor: '#4A5A9E',
+                backgroundColor: 'rgba(74, 90, 158, 0.15)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 3,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, grid: { color: '#DDE3DC' } }, x: { grid: { display: false } } },
+          },
+        })
+      );
     } catch (err) {
       UI.toast(err.message, 'error');
     }
@@ -174,25 +180,81 @@
       const colors = { Food: '#3F6F5E', Travel: '#2E7DA6', 'Shopping/Materials': '#C9832B', Education: '#4A5A9E', Entertainment: '#B45048', Other: '#8A8F87' };
 
       destroyIfExists('expense');
-      const ctx = document.getElementById('expense-analytics-chart').getContext('2d');
-      const parent = ctx.canvas.parentElement;
+      const canvas = document.getElementById('expense-analytics-chart');
+      const emptyEl = document.getElementById('expense-analytics-empty');
 
       if (!labels.length) {
-        parent.innerHTML = '<p class="text-muted">No expenses recorded in this period.</p>';
+        canvas.style.display = 'none';
+        emptyEl.style.display = 'block';
+        emptyEl.textContent = 'No expenses recorded in this period.';
         return;
       }
 
-      charts.expense = new Chart(ctx, {
-        type: 'doughnut',
-        data: { labels, datasets: [{ data: values, backgroundColor: labels.map((l) => colors[l] || '#8A8F87') }] },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } } },
-        },
-      });
+      canvas.style.display = 'block';
+      emptyEl.style.display = 'none';
+
+      try {
+        const ctx = canvas.getContext('2d');
+        charts.expense = new Chart(ctx, {
+          type: 'doughnut',
+          data: { labels, datasets: [{ data: values, backgroundColor: labels.map((l) => colors[l] || '#8A8F87') }] },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } } },
+          },
+        });
+      } catch (chartErr) {
+        canvas.style.display = 'none';
+        emptyEl.style.display = 'block';
+        emptyEl.textContent = 'Could not render the chart.';
+      }
     } catch (err) {
       UI.toast(err.message, 'error');
+    }
+  }
+
+  async function loadHistorySection() {
+    const tbody = document.getElementById('history-table-body');
+    const weeklyContainer = document.getElementById('weekly-spending-list');
+    try {
+      const res = await API.get('/analytics/history', { days: 14 });
+      const { history, weeklySpending } = res.data;
+
+      if (!history.length) {
+        tbody.innerHTML = '<tr><td colspan="6">No data yet.</td></tr>';
+      } else {
+        tbody.innerHTML = history
+          .map(
+            (day) => `
+            <tr>
+              <td>${UI.formatDate(day.date, { weekday: 'short', month: 'short', day: 'numeric' })}</td>
+              <td>${day.sleep.combinedMinutes > 0 ? day.sleep.combinedFormatted : '—'}</td>
+              <td>${UI.formatMl(day.water.total)}${day.water.goalReached ? ' ✓' : ''}</td>
+              <td>${UI.formatCurrency(day.expenses.total)}</td>
+              <td>${day.habits.completed}/${day.habits.assigned}</td>
+              <td>${day.todos.completed}</td>
+            </tr>`
+          )
+          .join('');
+      }
+
+      if (!weeklySpending.length) {
+        weeklyContainer.innerHTML = '<p class="text-muted">No spending recorded yet.</p>';
+      } else {
+        weeklyContainer.innerHTML = weeklySpending
+          .map(
+            (w) => `
+            <div class="list-row">
+              <span>Week of ${UI.formatDate(w.weekStart, { month: 'short', day: 'numeric' })}</span>
+              <span class="amount">${UI.formatCurrency(w.total)}</span>
+            </div>`
+          )
+          .join('');
+      }
+    } catch (err) {
+      tbody.innerHTML = '<tr><td colspan="6">Could not load history.</td></tr>';
+      weeklyContainer.innerHTML = '<p class="text-muted">Could not load weekly spending.</p>';
     }
   }
 
@@ -201,6 +263,7 @@
     loadWaterAnalytics();
     loadSleepAnalytics();
     loadExpenseAnalytics();
+    loadHistorySection();
   }
 
   loadAll();

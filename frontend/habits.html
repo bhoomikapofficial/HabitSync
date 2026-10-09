@@ -15,13 +15,33 @@
     <div class="page-header">
       <div>
         <div class="eyebrow-date" id="today-date"></div>
-        <h1>Habits</h1>
+        <h1>Habits &amp; Todos</h1>
       </div>
-      <button class="btn btn-primary" id="new-habit-btn">+ New habit</button>
+      <div class="flex flex-gap">
+        <button class="btn btn-outline" id="new-todo-btn">+ New todo</button>
+        <button class="btn btn-primary" id="new-habit-btn">+ New habit</button>
+      </div>
     </div>
 
-    <div class="card">
-      <div id="habits-list"><div class="loading-row">Loading…</div></div>
+    <div class="grid grid-2 habits-todos-grid">
+      <div class="card">
+        <div class="flex-between">
+          <h2>Habits</h2>
+        </div>
+        <div id="habits-list"><div class="loading-row">Loading…</div></div>
+      </div>
+
+      <div class="card">
+        <div class="flex-between">
+          <h2>Todo list</h2>
+        </div>
+        <div class="flex flex-gap mt-1" style="margin-bottom:1rem;">
+          <button class="btn btn-outline btn-sm todo-filter-btn active" data-status="pending">Pending</button>
+          <button class="btn btn-outline btn-sm todo-filter-btn" data-status="overdue">Overdue</button>
+          <button class="btn btn-outline btn-sm todo-filter-btn" data-status="completed">Completed</button>
+        </div>
+        <div id="todos-list"><div class="loading-row">Loading…</div></div>
+      </div>
     </div>
   </main>
 </div>
@@ -81,8 +101,51 @@
   </div>
 </div>
 
+<!-- Create / edit todo modal -->
+<div class="modal-overlay" id="todo-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="todo-modal-title">New todo</h2>
+      <button class="icon-btn" onclick="UI.closeModal('todo-modal')">✕</button>
+    </div>
+    <form id="todo-form">
+      <input type="hidden" id="todo-id" />
+      <div class="field">
+        <label for="todo-title">Title</label>
+        <input type="text" id="todo-title" required placeholder="e.g. Submit assignment" />
+      </div>
+      <div class="field">
+        <label for="todo-description">Description (optional)</label>
+        <textarea id="todo-description" placeholder="Any notes about this todo"></textarea>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="todo-deadline-date">Deadline date</label>
+          <input type="date" id="todo-deadline-date" required />
+        </div>
+        <div class="field">
+          <label for="todo-deadline-time">Deadline time (optional)</label>
+          <input type="time" id="todo-deadline-time" />
+        </div>
+      </div>
+      <div class="field checkbox-field">
+        <label class="checkbox-label">
+          <input type="checkbox" id="todo-reminder-enabled" checked />
+          <span>Remind me as the deadline approaches</span>
+        </label>
+        <div class="field-hint">You'll get a nudge ~2 days out, another ~5-6 hours out, then hourly in the final hour - only while this todo is incomplete.</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="UI.closeModal('todo-modal')">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="todo-submit-btn">Save todo</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script src="js/api.js"></script>
 <script src="js/ui.js"></script>
+<script src="js/notifications.js"></script>
 <script src="js/habits.js"></script>
 </body>
 </html>

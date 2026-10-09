@@ -44,6 +44,24 @@
     }
   });
 
+  document.getElementById('water-reminder-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const enabled = document.getElementById('water-reminder-enabled').checked;
+    const time = document.getElementById('water-reminder-time').value || '21:00';
+    try {
+      await API.put('/auth/me', { waterEveningReminderEnabled: enabled, waterEveningReminderTime: time });
+      const user = API.getUser();
+      if (user) {
+        user.waterEveningReminderEnabled = enabled;
+        user.waterEveningReminderTime = time;
+        API.setSession(API.getToken(), user);
+      }
+      UI.toast('Reminder preferences saved');
+    } catch (err) {
+      UI.toast(err.message, 'error');
+    }
+  });
+
   async function addWater(amount) {
     if (!amount || amount <= 0) return;
     try {
@@ -96,14 +114,27 @@
   async function loadToday() {
     try {
       const res = await API.get('/water');
-      const { logs, total, goal } = res.data;
+      const { logs, total, goal, remaining, goalReached, eveningReminderEnabled, eveningReminderTime } = res.data;
       const pct = goal > 0 ? Math.min(100, Math.round((total / goal) * 100)) : 0;
 
       document.getElementById('water-today').textContent = `${UI.formatMl(total)} / ${UI.formatMl(goal)}`;
+      document.getElementById('water-remaining').textContent = goalReached
+        ? 'Goal reached for today 🎉'
+        : `${UI.formatMl(remaining)} remaining to reach your goal`;
       document.getElementById('water-today-bar').style.width = `${pct}%`;
+
+      document.getElementById('water-reminder-enabled').checked = Boolean(eveningReminderEnabled);
+      document.getElementById('water-reminder-time').value = eveningReminderTime || '21:00';
 
       renderLogList(logs);
       NotificationsHelper.goalWarning(pct, 'water');
+      NotificationsHelper.checkWaterEveningReminder({
+        remaining,
+        goal,
+        goalReached,
+        enabled: eveningReminderEnabled,
+        reminderTime: eveningReminderTime,
+      });
     } catch (err) {
       UI.toast(err.message, 'error');
     }
@@ -112,36 +143,41 @@
   async function loadHistory() {
     try {
       const res = await API.get('/water/history', { days: 7 });
-      const { dailyTotals, goal } = res.data;
+      const { dailyTotals } = res.data;
 
       const labels = dailyTotals.map((d) => UI.formatDate(d.date));
       const values = dailyTotals.map((d) => d.total);
 
-      const ctx = document.getElementById('water-chart').getContext('2d');
-      if (chart) chart.destroy();
-      chart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels,
-          datasets: [
-            {
-              label: 'Water (ml)',
-              data: values,
-              backgroundColor: '#2E7DA6',
-              borderRadius: 4,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            y: { beginAtZero: true, grid: { color: '#DDE3DC' } },
-            x: { grid: { display: false } },
+      const canvas = document.getElementById('water-chart');
+      if (chart) {
+        chart.destroy();
+        chart = null;
+      }
+      chart = UI.renderChartSafely(canvas, () =>
+        new Chart(canvas.getContext('2d'), {
+          type: 'bar',
+          data: {
+            labels,
+            datasets: [
+              {
+                label: 'Water (ml)',
+                data: values,
+                backgroundColor: '#2E7DA6',
+                borderRadius: 4,
+              },
+            ],
           },
-        },
-      });
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              y: { beginAtZero: true, grid: { color: '#DDE3DC' } },
+              x: { grid: { display: false } },
+            },
+          },
+        })
+      );
     } catch (err) {
       UI.toast(err.message, 'error');
     }
@@ -149,4 +185,6 @@
 
   loadToday();
   loadHistory();
+  // Re-check the evening reminder periodically in case the page is left open.
+  setInterval(loadToday, 10 * 60 * 1000);
 })();

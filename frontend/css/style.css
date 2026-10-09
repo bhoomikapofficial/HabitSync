@@ -575,6 +575,7 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 .flex { display: flex; }
 .flex-between { display: flex; align-items: center; justify-content: space-between; }
 .flex-gap { gap: 0.6em; }
+.flex-wrap { flex-wrap: wrap; }
 .mt-1 { margin-top: 1rem; }
 .mt-2 { margin-top: 2rem; }
 .text-muted { color: var(--ink-soft); }
@@ -582,6 +583,66 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 .chart-wrap.small { height: 180px; }
 
 .loading-row { color: var(--ink-soft); font-size: 0.85rem; padding: 1em 0; }
+.chart-error { color: var(--ink-soft); font-size: 0.85rem; padding: 2em 1em; text-align: center; }
+
+/* =========================================================================
+   Version 2.0 additions: todos, checkbox fields, day tabs, recurrence UI
+   ========================================================================= */
+
+.checkbox-field { margin-top: 0.4rem; }
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  font-weight: 500;
+  cursor: pointer;
+}
+.checkbox-label input[type="checkbox"] { width: 18px; height: 18px; }
+
+.list-row.is-overdue { background: var(--danger-tint); border-radius: var(--radius-sm, 8px); padding-left: 0.6em; padding-right: 0.6em; }
+.list-row.is-overdue .title { color: var(--danger); }
+
+.todo-filter-btn.active,
+.day-tab.active,
+.repeat-type-btn.active {
+  background: var(--sage);
+  border-color: var(--sage);
+  color: #fff;
+}
+
+.day-tabs { display: flex; gap: 0.4em; flex-wrap: wrap; margin-bottom: 1rem; }
+.day-tab {
+  padding: 0.4em 0.9em;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.weekday-picker { display: flex; gap: 0.35em; flex-wrap: wrap; margin-top: 0.4em; }
+.weekday-chip {
+  padding: 0.4em 0.7em;
+  border-radius: 8px;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.weekday-chip.active { background: var(--indigo); border-color: var(--indigo); color: #fff; }
+
+.custom-dates-list { display: flex; flex-direction: column; gap: 0.4em; margin-top: 0.5em; }
+.custom-date-row { display: flex; align-items: center; gap: 0.5em; }
+
+.summary-stat-row { display: flex; gap: 1.5rem; flex-wrap: wrap; margin: 0.6rem 0 1.2rem; }
+.summary-stat { min-width: 110px; }
+.summary-stat .value { font-family: var(--font-mono); font-size: 1.35rem; font-weight: 700; }
+.summary-stat .label { font-size: 0.76rem; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.04em; }
+
+.history-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.history-table th, .history-table td { text-align: left; padding: 0.55em 0.6em; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.history-table th { color: var(--ink-soft); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.03em; }
+.history-table-wrap { overflow-x: auto; }
 
 /* =========================================================================
    Responsive
@@ -597,4 +658,5 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   .main { padding: 1.4rem 1.2rem 2.4rem; }
   .auth-shell { grid-template-columns: 1fr; }
   .auth-hero { display: none; }
+  .grid-2, .grid-3, .habits-todos-grid { grid-template-columns: 1fr; }
 }

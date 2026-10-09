@@ -1,10 +1,12 @@
 const WaterLog = require('../models/WaterLog');
 const asyncHandler = require('../utils/asyncHandler');
-const { todayRange, lastNDaysRange } = require('../utils/dateHelpers');
+const { todayRange, lastNDaysRange, lastNDaysKeys, dayKey, zeroFillByKey } = require('../utils/dateHelpers');
 
 // @route   GET /api/water
 // @access  Private
-// Returns today's water logs and total, plus the user's daily goal.
+// Returns today's water logs and total, plus the user's daily goal and
+// how much remains (used for the evening "remaining water" reminder:
+// remaining = goal - today's recorded intake).
 const getToday = asyncHandler(async (req, res) => {
   const { start, end } = todayRange();
 
@@ -14,10 +16,21 @@ const getToday = asyncHandler(async (req, res) => {
   }).sort({ timestamp: 1 });
 
   const total = logs.reduce((sum, l) => sum + l.amount, 0);
+  const goal = req.user.waterGoalMl;
+  const remaining = Math.max(0, goal - total);
+  const goalReached = goal > 0 && total >= goal;
 
   res.status(200).json({
     success: true,
-    data: { logs, total, goal: req.user.waterGoalMl },
+    data: {
+      logs,
+      total,
+      goal,
+      remaining,
+      goalReached,
+      eveningReminderEnabled: req.user.waterEveningReminderEnabled,
+      eveningReminderTime: req.user.waterEveningReminderTime,
+    },
   });
 });
 
@@ -53,7 +66,10 @@ const deleteLog = asyncHandler(async (req, res) => {
 
 // @route   GET /api/water/history?days=7
 // @access  Private
-// Returns per-day totals for the last N days, useful for charts.
+// Returns per-day totals for the last N days, useful for charts. Every
+// day in the range is included (zero-filled) so the chart always shows
+// a continuous, correctly-labeled history instead of only the days that
+// happen to have a logged entry.
 const getHistory = asyncHandler(async (req, res) => {
   const days = Math.min(Math.max(parseInt(req.query.days, 10) || 7, 1), 90);
   const { start, end } = lastNDaysRange(days);
@@ -66,13 +82,11 @@ const getHistory = asyncHandler(async (req, res) => {
   // Bucket logs by calendar day (UTC)
   const buckets = {};
   logs.forEach((log) => {
-    const key = new Date(log.timestamp).toISOString().slice(0, 10);
+    const key = dayKey(log.timestamp);
     buckets[key] = (buckets[key] || 0) + log.amount;
   });
 
-  const dailyTotals = Object.entries(buckets)
-    .map(([date, total]) => ({ date, total }))
-    .sort((a, b) => (a.date > b.date ? 1 : -1));
+  const dailyTotals = zeroFillByKey(buckets, lastNDaysKeys(days));
 
   res.status(200).json({ success: true, data: { dailyTotals, goal: req.user.waterGoalMl } });
 });
